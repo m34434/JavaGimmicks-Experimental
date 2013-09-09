@@ -16,7 +16,7 @@ import math.parse.plugin.AddSubtractParserPlugin;
 import math.parse.plugin.BracketParserPlugin;
 import math.parse.plugin.Helper;
 import math.parse.plugin.LiteralParserPlugin;
-import math.parse.plugin.MultiplyDivideParserPlugin;
+import math.parse.plugin.MultiplyDivideModParserPlugin;
 
 public class DefaultParser implements Parser
 {
@@ -38,7 +38,7 @@ public class DefaultParser implements Parser
     public void addDefaultPlugins()
     {
         addPlugin(new AddSubtractParserPlugin());
-        addPlugin(new MultiplyDivideParserPlugin());
+        addPlugin(new MultiplyDivideModParserPlugin());
         addPlugin(new BracketParserPlugin());
         addPlugin(new LiteralParserPlugin());
     }
@@ -120,7 +120,7 @@ public class DefaultParser implements Parser
             
             if(!oMatcher.matches())
             {
-                throw new IllegalStateException("Could not parse sub expression '" + sSubstring + "'!");
+                throw new IllegalStateException("Could not parse sub expression '" + oSubContext + "'!");
             }
             
             return oSubContext.getExpression(Integer.parseInt(oMatcher.group(1)));
@@ -166,6 +166,22 @@ public class DefaultParser implements Parser
         public Expression resolveExpression(String sExpressionMarker)
         {
             return getExpression(Helper.getMarkerNumber(sExpressionMarker));
+        }
+        
+        public String toString()
+        {
+            final Matcher oMatcher = ParseContext.PATTERN_EXPRESSION_MARKER.matcher(m_sExpression);
+            
+            final StringBuffer oResult = new StringBuffer();
+            
+            while(oMatcher.find())
+            {
+                oMatcher.appendReplacement(oResult, getExpression(Integer.parseInt(oMatcher.group(1))).toString());
+            }
+            
+            oMatcher.appendTail(oResult);
+            
+            return oResult.toString();
         }
         
         private void unregisterExpressionMarker(int iMarkerIndex)

@@ -5,13 +5,14 @@ import java.util.regex.Pattern;
 
 import math.expression.Expression;
 import math.expression.impl.DivideOperation;
+import math.expression.impl.ModuloOperation;
 import math.expression.impl.MultiplyOperation;
 import math.parse.ParseContext;
 import math.parse.ParserPlugin;
 
-public class MultiplyDivideParserPlugin implements ParserPlugin
+public class MultiplyDivideModParserPlugin implements ParserPlugin
 {
-    private final Pattern PATTERN = Pattern.compile(ParseContext.PATTERN_EXPRESSION_MARKER.pattern() + "([*/])" + ParseContext.PATTERN_EXPRESSION_MARKER.pattern());
+    private final Pattern PATTERN = Pattern.compile(ParseContext.PATTERN_EXPRESSION_MARKER.pattern() + "([*/%])" + ParseContext.PATTERN_EXPRESSION_MARKER.pattern());
     
     public static int PRIOPRITY = 50;
     
@@ -43,9 +44,13 @@ public class MultiplyDivideParserPlugin implements ParserPlugin
        {
            oNewExpression = new MultiplyOperation(oLeftOperand, oRightOperand);
        }
-       else
+       else if("/".equals(sOperationString))
        {
            oNewExpression = new DivideOperation(oLeftOperand, oRightOperand);
+       }
+       else
+       {
+           oNewExpression = new ModuloOperation(oLeftOperand, oRightOperand);
        }
        
        oContext.registerExpression(oMatcher.start(), oMatcher.end(), oNewExpression);

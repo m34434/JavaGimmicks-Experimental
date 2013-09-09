@@ -35,6 +35,24 @@ public class MathTest
         test("(1 + 2) * (3 - 4)", BigDecimal.valueOf(-3));
     }
     
+    @Test
+    public void test5() throws Exception
+    {
+        test("((1 - 2) + 3) * 4", BigDecimal.valueOf(8));
+    }
+    
+    @Test
+    public void test6() throws Exception
+    {
+        test("((1 + 2) - (3 - 4) ) * (5 + 6)", BigDecimal.valueOf(44));
+    }
+    
+    @Test
+    public void test7() throws Exception
+    {
+        test("((1 + 2) - (3 - 4) ) * (5 + 13 % 7)", BigDecimal.valueOf(44));
+    }
+    
     private void test(String sExpression, BigDecimal oExpected) throws Exception
     {
         

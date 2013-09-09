@@ -13,7 +13,7 @@ public class LiteralParserPlugin implements ParserPlugin
 {
     private static final Pattern PATTERN = Pattern.compile("((\\d+)(\\.\\d+)?)");
     
-    public static final int PRIORITY = 100;
+    public static final int PRIORITY = Integer.MAX_VALUE;
     
     @Override
     public int getPriority()
