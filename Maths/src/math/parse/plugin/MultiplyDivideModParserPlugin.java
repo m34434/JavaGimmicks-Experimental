@@ -1,18 +1,16 @@
 package math.parse.plugin;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import math.expression.Expression;
 import math.expression.impl.DivideOperation;
 import math.expression.impl.ModuloOperation;
 import math.expression.impl.MultiplyOperation;
-import math.parse.ParseContext;
-import math.parse.ParserPlugin;
+import math.parse.PatternBuilder;
 
-public class MultiplyDivideModParserPlugin implements ParserPlugin
+public class MultiplyDivideModParserPlugin extends AbstractRegexParserPlugin
 {
-    private final Pattern PATTERN = Pattern.compile(ParseContext.PATTERN_EXPRESSION_MARKER.pattern() + "([*/%])" + ParseContext.PATTERN_EXPRESSION_MARKER.pattern());
+    private final Pattern PATTERN = new PatternBuilder().appendExpressionMarker().appendRegexGroup("[*/%]").appendExpressionMarker().build(); 
     
     public static int PRIOPRITY = 50;
     
@@ -21,22 +19,19 @@ public class MultiplyDivideModParserPlugin implements ParserPlugin
     {
         return PRIOPRITY;
     }
+    
+    @Override
+    protected Pattern getPattern()
+    {
+        return PATTERN;
+    }
 
     @Override
-    public boolean parse(ParseContext oContext)
+    protected boolean parse(RegexParseContext oContext)
     {
-       final String sExpressionString = oContext.getStringExpression();
-       
-       final Matcher oMatcher = PATTERN.matcher(sExpressionString);
-       
-       if(!oMatcher.find())
-       {
-           return false;
-       }
-       
-       final Expression oLeftOperand = oContext.getExpression(Integer.parseInt(oMatcher.group(1)));
-       final String sOperationString = oMatcher.group(2);
-       final Expression oRightOperand = oContext.getExpression(Integer.parseInt(oMatcher.group(3)));
+       final Expression oLeftOperand = oContext.getExpressionForMatchedMarker(1);
+       final String sOperationString = oContext.group(2);
+       final Expression oRightOperand = oContext.getExpressionForMatchedMarker(3);
        
        final Expression oNewExpression;
        
@@ -53,7 +48,7 @@ public class MultiplyDivideModParserPlugin implements ParserPlugin
            oNewExpression = new ModuloOperation(oLeftOperand, oRightOperand);
        }
        
-       oContext.registerExpression(oMatcher.start(), oMatcher.end(), oNewExpression);
+       oContext.registerExpressionForMatch(oNewExpression);
        
        return true;
     }

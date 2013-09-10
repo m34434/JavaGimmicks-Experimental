@@ -18,7 +18,7 @@ public class BracketParserPlugin implements ParserPlugin
     @Override
     public boolean parse(ParseContext oContext)
     {
-        final String sExpressionString = oContext.getStringExpression();
+        final String sExpressionString = oContext.getParseExpression();
         int iLastOpeningBracket = sExpressionString.lastIndexOf('(');
         
         if(iLastOpeningBracket < 0)

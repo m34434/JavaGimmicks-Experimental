@@ -26,7 +26,7 @@ public class LiteralParserPlugin implements ParserPlugin
     {
         boolean bAppliedChanges = false;
         
-        final String sStringExpression = oContext.getStringExpression();
+        final String sStringExpression = oContext.getParseExpression();
         final Matcher oMatcher = PATTERN.matcher(sStringExpression);
         
         while(oMatcher.find())
