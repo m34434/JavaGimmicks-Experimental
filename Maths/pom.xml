@@ -9,8 +9,9 @@
 	<dependencies>
 		<dependency>
 			<groupId>net.sf.javagimmicks</groupId>
-			<artifactId>GimmickUtils</artifactId>
-			<version>0.74</version>
+			<artifactId>GimmickUtils-testing</artifactId>
+			<version>0.80</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
