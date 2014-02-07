@@ -11,17 +11,17 @@ public interface ParseContext
     Pattern PATTERN_EXPRESSION_MARKER = Pattern.compile(Pattern.quote("$$") + "(\\d+)" + Pattern.quote("$$"));
     
     String getParseExpression();
-    Matcher match(Pattern oPattern);
-    Matcher match(PatternBuilder oPatternBuilder);
+    Matcher match(Pattern pattern);
+    Matcher match(PatternBuilder patternBuilder);
     
     SortedSet<ParserPlugin> getPlugins();
     
-    Expression parseSubexpression(int iStartIndex, int iEndIndex);
+    Expression parseSubexpression(int startIndex, int endIndex);
     
-    int registerExpression(int iStartIndex, int iEndIndex, Expression oExpression);
+    int registerExpression(int startIndex, int endIndex, Expression expression);
     
-    Expression getExpression(int iExpressionIndex);
-    Expression getExpression(String sExpressionIndex);
-    Expression getExpression(Matcher oMatcher, int iGroup);
-    Expression getExpressionForMarker(String sExpressionMarker);
+    Expression getExpression(int expressionIndex);
+    Expression getExpression(String expressionIndex);
+    Expression getExpression(Matcher matcher, int group);
+    Expression getExpressionForMarker(String expressionMarker);
 }

@@ -4,7 +4,7 @@ import net.sf.javagimmicks.math.expression.Expression;
 
 public interface Parser
 {
-    void addPlugin(ParserPlugin oPlugin);
+    void addPlugin(ParserPlugin plugin);
     
-    Expression parse(String sExpressionString);
+    Expression parse(String expressionString);
 }

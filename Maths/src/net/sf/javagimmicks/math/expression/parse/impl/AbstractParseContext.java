@@ -13,177 +13,177 @@ import net.sf.javagimmicks.math.expression.parse.plugin.Helper;
 
 public abstract class AbstractParseContext implements ParseContext
 {
-    private String m_sExpression;
+    private String _expression;
     
-    private final Map<Integer, Expression> m_oExpressions = new HashMap<>();
+    private final Map<Integer, Expression> _expressions = new HashMap<>();
     
-    private Counter m_oCurrentExpressionIndex;
+    private Counter _currentExpressionIndex;
     
-    private AbstractParseContext m_oParent;
+    private AbstractParseContext _parentContext;
     
-    protected AbstractParseContext(String sExpression, AbstractParseContext oParent)
+    protected AbstractParseContext(String expression, AbstractParseContext parentContext)
     {
-        m_sExpression = sExpression;
-        m_oCurrentExpressionIndex = oParent == null ? new Counter() : oParent.m_oCurrentExpressionIndex;
-        m_oParent = oParent;
+        _expression = expression;
+        _currentExpressionIndex = parentContext == null ? new Counter() : parentContext._currentExpressionIndex;
+        _parentContext = parentContext;
     }
 
-    protected AbstractParseContext(String sExpression)
+    protected AbstractParseContext(String expression)
     {
-        this(sExpression, null);
+        this(expression, null);
     }
     
-    abstract protected AbstractParseContext createChildContext(String sChildExpression);
+    abstract protected AbstractParseContext createChildContext(String childExpression);
 
     @Override
     public String getParseExpression()
     {
-        return m_sExpression;
+        return _expression;
     }
     
     @Override
-    public Matcher match(Pattern oPattern)
+    public Matcher match(Pattern pattern)
     {
-        return oPattern.matcher(m_sExpression);
+        return pattern.matcher(_expression);
     }
 
     @Override
-    public Matcher match(PatternBuilder oPatternBuilder)
+    public Matcher match(PatternBuilder patternBuilder)
     {
-        return match(oPatternBuilder.build());
+        return match(patternBuilder.build());
     }
 
     @Override
-    public Expression parseSubexpression(int iStartIndex, int iEndIndex)
+    public Expression parseSubexpression(int startIndex, int endIndex)
     {
-        final String sSubstring = m_sExpression.substring(iStartIndex, iEndIndex);
+        final String substring = _expression.substring(startIndex, endIndex);
         
-        final AbstractParseContext oSubContext = createChildContext(sSubstring);
+        final AbstractParseContext subContext = createChildContext(substring);
         
-        boolean bAppliedChanges = true;
-        while(bAppliedChanges)
+        boolean appliedChanges = true;
+        while(appliedChanges)
         {
-            bAppliedChanges = false;
+            appliedChanges = false;
             
-            for(ParserPlugin oPlugin : getPlugins())
+            for(ParserPlugin plugin : getPlugins())
             {
-                if(oPlugin.parse(oSubContext))
+                if(plugin.parse(subContext))
                 {
-                    bAppliedChanges = true;
+                    appliedChanges = true;
                     break;
                 }
             }
         }
 
-        final String sSubContextExpression = oSubContext.getParseExpression();
-        final Matcher oMatcher = ParseContext.PATTERN_EXPRESSION_MARKER.matcher(sSubContextExpression);
+        final String subContextExpression = subContext.getParseExpression();
+        final Matcher expressionIndexMatcher = ParseContext.PATTERN_EXPRESSION_MARKER.matcher(subContextExpression);
         
-        if(!oMatcher.matches())
+        if(!expressionIndexMatcher.matches())
         {
-            throw new IllegalStateException("Could not parse sub expression '" + oSubContext + "'!");
+            throw new IllegalStateException("Could not parse sub expression '" + subContext + "'!");
         }
         
-        return oSubContext.getExpression(Integer.parseInt(oMatcher.group(1)));
+        return subContext.getExpression(Integer.parseInt(expressionIndexMatcher.group(1)));
     }
 
     @Override
-    public int registerExpression(int iStartIndex, int iEndIndex, Expression oExpression)
+    public int registerExpression(int startIndex, int endIndex, Expression expression)
     {
-        final String sReplacedExpression = m_sExpression.substring(iStartIndex, iEndIndex);
+        final String replacedExpression = _expression.substring(startIndex, endIndex);
         
-        final int iExpressionIndex = m_oCurrentExpressionIndex.incrementAndGet();
-        m_oExpressions.put(iExpressionIndex, oExpression);
-        m_sExpression = m_sExpression.substring(0, iStartIndex) + "$$" + iExpressionIndex + "$$" + m_sExpression.substring(iEndIndex, m_sExpression.length());
+        final int expressionIndex = _currentExpressionIndex.incrementAndGet();
+        _expressions.put(expressionIndex, expression);
+        _expression = _expression.substring(0, startIndex) + "$$" + expressionIndex + "$$" + _expression.substring(endIndex, _expression.length());
         
-        final Matcher oReplacedMarkersMatcher = PATTERN_EXPRESSION_MARKER.matcher(sReplacedExpression);
-        while(oReplacedMarkersMatcher.find())
+        final Matcher replacedMarkersMatcher = PATTERN_EXPRESSION_MARKER.matcher(replacedExpression);
+        while(replacedMarkersMatcher.find())
         {
-            int iMarkerIndex = Integer.parseInt(oReplacedMarkersMatcher.group(1));
+            int markerIndex = Integer.parseInt(replacedMarkersMatcher.group(1));
             
-            unregisterExpressionMarker(iMarkerIndex);
+            unregisterExpressionMarker(markerIndex);
         }
         
-        return iExpressionIndex;
+        return expressionIndex;
     }
 
     @Override
-    public Expression getExpression(int iExpressionIndex)
+    public Expression getExpression(int expressionIndex)
     {
-        if(m_oExpressions.containsKey(iExpressionIndex))
+        if(_expressions.containsKey(expressionIndex))
         {
-            return m_oExpressions.get(iExpressionIndex);
+            return _expressions.get(expressionIndex);
         }
         
-        if(m_oParent == null)
+        if(_parentContext == null)
         {
-            throw new IllegalStateException("Cannot find expression with marker index '" + iExpressionIndex + "'!");
+            throw new IllegalStateException("Cannot find expression with marker index '" + expressionIndex + "'!");
         }
         
-        return m_oParent.getExpression(iExpressionIndex);
+        return _parentContext.getExpression(expressionIndex);
     }
     
-    @Override
-    public Expression getExpression(String sExpressionIndex)
+//    @Override
+    public Expression getExpression(String expressionIndex)
     {
-        return getExpression(Integer.parseInt(sExpressionIndex));
+        return getExpression(Integer.parseInt(expressionIndex));
     }
 
-    @Override
-    public Expression getExpression(Matcher oMatcher, int iGroup)
+//    @Override
+    public Expression getExpression(Matcher matcher, int group)
     {
-        return getExpression(oMatcher.group(iGroup));
+        return getExpression(matcher.group(group));
     }
 
-    @Override
-    public Expression getExpressionForMarker(String sExpressionMarker)
+//    @Override
+    public Expression getExpressionForMarker(String expressionMarker)
     {
-        return getExpression(Helper.getMarkerNumber(sExpressionMarker));
+        return getExpression(Helper.getMarkerNumber(expressionMarker));
     }
     
     public String toString()
     {
-        final Matcher oMatcher = ParseContext.PATTERN_EXPRESSION_MARKER.matcher(m_sExpression);
+        final Matcher matcher = ParseContext.PATTERN_EXPRESSION_MARKER.matcher(_expression);
         
-        final StringBuffer oResult = new StringBuffer();
+        final StringBuffer result = new StringBuffer();
         
-        while(oMatcher.find())
+        while(matcher.find())
         {
-            oMatcher.appendReplacement(oResult, getExpression(Integer.parseInt(oMatcher.group(1))).toString());
+            matcher.appendReplacement(result, getExpression(Integer.parseInt(matcher.group(1))).toString());
         }
         
-        oMatcher.appendTail(oResult);
+        matcher.appendTail(result);
         
-        return oResult.toString();
+        return result.toString();
     }
     
-    private void unregisterExpressionMarker(int iMarkerIndex)
+    private void unregisterExpressionMarker(int markerIndex)
     {
-        m_oExpressions.remove(iMarkerIndex);
+        _expressions.remove(markerIndex);
         
-        if(m_oParent != null)
+        if(_parentContext != null)
         {
-            m_oParent.unregisterExpressionMarker(iMarkerIndex);
+            _parentContext.unregisterExpressionMarker(markerIndex);
         }
     }
     
     @SuppressWarnings("unused")
     private static class Counter
     {
-        private int m_iValue;
+        private int _value;
         
         public int get()
         {
-            return m_iValue;
+            return _value;
         }
         
         public int getAndIncrement()
         {
-            return m_iValue++;
+            return _value++;
         }
         
         public int incrementAndGet()
         {
-            return ++m_iValue;
+            return ++_value;
         }
     }
 }

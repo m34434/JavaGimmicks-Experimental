@@ -15,11 +15,11 @@ import net.sf.javagimmicks.math.expression.parse.plugin.MultiplyDivideModParserP
 
 public class DefaultParser implements Parser
 {
-    private final SortedSet<ParserPlugin> m_oPlugins = new TreeSet<>(new ParserPluginComparator());
+    private final SortedSet<ParserPlugin> _plugins = new TreeSet<>(new ParserPluginComparator());
     
-    public DefaultParser(boolean bUseDefaultPlugins)
+    public DefaultParser(boolean useDefaultPlugins)
     {
-        if(bUseDefaultPlugins)
+        if(useDefaultPlugins)
         {
             addDefaultPlugins();
         }
@@ -39,52 +39,52 @@ public class DefaultParser implements Parser
     }
 
     @Override
-    public void addPlugin(ParserPlugin oPlugin)
+    public void addPlugin(ParserPlugin plugin)
     {
-        m_oPlugins.add(oPlugin);
+        _plugins.add(plugin);
     }
 
     @Override
-    public Expression parse(String sExpressionString)
+    public Expression parse(String expressionString)
     {
-        sExpressionString = sExpressionString.replaceAll("\\s", "");
+        expressionString = expressionString.replaceAll("\\s", "");
         
-        final DefaultContext oContext = new DefaultContext(sExpressionString);
+        final DefaultContext context = new DefaultContext(expressionString);
         
-        return oContext.parseSubexpression(0, sExpressionString.length());
+        return context.parseSubexpression(0, expressionString.length());
     }
 
     private class DefaultContext extends AbstractParseContext
     {
-        public DefaultContext(String sExpression)
+        public DefaultContext(String expression)
         {
-            super(sExpression);
+            super(expression);
         }
 
-        protected DefaultContext(String sExpression, DefaultContext oParent)
+        protected DefaultContext(String expression, DefaultContext parentContext)
         {
-            super(sExpression, oParent);
+            super(expression, parentContext);
         }
 
         @Override
         public SortedSet<ParserPlugin> getPlugins()
         {
-            return Collections.unmodifiableSortedSet(m_oPlugins);
+            return Collections.unmodifiableSortedSet(_plugins);
         }
 
         @Override
-        protected AbstractParseContext createChildContext(String sChildExpression)
+        protected AbstractParseContext createChildContext(String childExpression)
         {
-            return new DefaultContext(sChildExpression, this);
+            return new DefaultContext(childExpression, this);
         }
     }
     
     private static class ParserPluginComparator implements Comparator<ParserPlugin>
     {
         @Override
-        public int compare(ParserPlugin o1, ParserPlugin o2)
+        public int compare(ParserPlugin p1, ParserPlugin p2)
         {
-            return o2.getPriority() - o1.getPriority();
+            return p2.getPriority() - p1.getPriority();
         }
     }
 }
