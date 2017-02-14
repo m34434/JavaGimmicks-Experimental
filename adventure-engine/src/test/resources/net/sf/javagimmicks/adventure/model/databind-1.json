@@ -1,0 +1,21 @@
+{
+  "locations" : [ {
+    "@id" : 1,
+    "name" : "a",
+    "transitions" : [ {
+      "target" : 2
+      },{
+      "target" : 3
+      } ] }, {
+    "@id" : 2,
+    "name" : "b",
+    "transitions" : [ {
+      "target" : 3
+      } ] }, {
+    "@id" : 3,
+    "name" : "c",
+    "transitions" : [ {
+      "target" : 1
+    } ] }
+   ]
+}
