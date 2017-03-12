@@ -9,45 +9,59 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import net.sf.javagimmicks.adventure.model.json.Model;
-import net.sf.javagimmicks.adventure.model.json.Node;
+import net.sf.javagimmicks.adventure.Engine;
+import net.sf.javagimmicks.adventure.model.json.ActionConfig;
+import net.sf.javagimmicks.adventure.model.json.EngineConfig;
+import net.sf.javagimmicks.adventure.model.json.NodeConfig;
+import net.sf.javagimmicks.adventure.model.json.NodeConfig.TransitionConfig;
 
 public class DatabindTest
 {
    @Test
-   public void testSerilize() throws JsonProcessingException
+   public void testSerialize() throws JsonProcessingException
    {
-      final Model g = new Model();
+      final EngineConfig ec = new EngineConfig("a");
 
-      final Node a = new Node("a");
-      final Node b = new Node("b");
-      final Node c = new Node("c");
+      final NodeConfig a = new NodeConfig("a");
+      final NodeConfig b = new NodeConfig("b");
+      final NodeConfig c = new NodeConfig("c");
 
-      g.getNodes().add(a);
-      g.getNodes().add(b);
-      g.getNodes().add(c);
+      ec.getNodes().add(a);
+      ec.getNodes().add(b);
+      ec.getNodes().add(c);
 
-      a.connectTo(b);
-      b.connectTo(c);
-      c.connectTo(a);
-      a.connectTo(c);
+      a.getTransitions().add(new TransitionConfig("b"));
+      a.getTransitions().add(new TransitionConfig("c"));
+      b.getTransitions().add(new TransitionConfig("c"));
+      c.getTransitions().add(new TransitionConfig("a"));
 
-      g.getState().put("foo", "bar");
-      g.getState().put("num", 1000L);
+      ec.getState().put("foo", "bar");
+      ec.getState().put("num", 1000L);
 
       final Map<String, Object> subState = new LinkedHashMap<>();
       subState.put("subFoo", "subBar");
-      g.getState().put("subState", subState);
+      ec.getState().put("subState", subState);
 
-      final String gameString = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(g);
+      final ActionConfig actionChangeFoo = new ActionConfig("changeFoo", "foo = \"argh!\"\nsubState.subFoo = \"dummy\"",
+            "b");
+      ec.getActions().add(actionChangeFoo);
 
-      System.out.println(gameString);
+      final String configString = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(ec);
+      System.out.println(configString);
+
+      final Engine engine = new Engine(ec);
+      engine.performAction("changeFoo");
+
+      final String stateString = new ObjectMapper().writerWithDefaultPrettyPrinter()
+            .writeValueAsString(engine.getState());
+      System.out.println(stateString);
    }
 
    @Test
    public void testParse() throws IOException
    {
-      final Model g = new ObjectMapper().readValue(getClass().getResourceAsStream("databind-1.json"), Model.class);
+      final EngineConfig g = new ObjectMapper().readValue(getClass().getResourceAsStream("databind-1.json"),
+            EngineConfig.class);
 
       System.out.println(g);
    }

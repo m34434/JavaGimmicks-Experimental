@@ -1,4 +1,5 @@
 {
+  "startNode" : "a",
   "nodes" : [ {
     "name" : "a",
     "transitions" : [ {
@@ -16,6 +17,10 @@
     "transitions" : [ {
       "target" : "a"
     } ]
+  } ],
+  "actions" : [ {
+    "name" : "changeFoo",
+    "script" : "foo = \"argh!\""
   } ],
   "state" : {
     "foo" : "bar",
