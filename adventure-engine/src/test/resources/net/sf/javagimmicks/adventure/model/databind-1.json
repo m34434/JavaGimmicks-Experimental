@@ -1,21 +1,27 @@
 {
-  "locations" : [ {
-    "@id" : 1,
+  "nodes" : [ {
     "name" : "a",
     "transitions" : [ {
-      "target" : 2
-      },{
-      "target" : 3
-      } ] }, {
-    "@id" : 2,
+      "target" : "b"
+    }, {
+      "target" : "c"
+    } ]
+  }, {
     "name" : "b",
     "transitions" : [ {
-      "target" : 3
-      } ] }, {
-    "@id" : 3,
+      "target" : "c"
+    } ]
+  }, {
     "name" : "c",
     "transitions" : [ {
-      "target" : 1
-    } ] }
-   ]
+      "target" : "a"
+    } ]
+  } ],
+  "state" : {
+    "foo" : "bar",
+    "num" : 1000,
+    "subState" : {
+      "subFoo" : "subBar"
+    }
+  }
 }
