@@ -1,4 +1,4 @@
-package net.sf.javagimmicks.adventure.model.json;
+package net.sf.javagimmicks.ase.config;
 
 import java.util.ArrayList;
 import java.util.List;

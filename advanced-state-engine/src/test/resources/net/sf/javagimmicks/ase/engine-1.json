@@ -20,7 +20,15 @@
   } ],
   "actions" : [ {
     "name" : "changeFoo",
-    "script" : "foo = \"argh!\""
+    "dependencies" : [ {
+      "stateKey" : "foo",
+      "value" : "bar"
+    } ],
+    "newNode" : "b",
+    "script" : "foo = 'argh!'\nsubState.subFoo = 'dummy'"
+  }, {
+    "name" : "incNum",
+    "script" : "num = num + 1"
   } ],
   "state" : {
     "foo" : "bar",
