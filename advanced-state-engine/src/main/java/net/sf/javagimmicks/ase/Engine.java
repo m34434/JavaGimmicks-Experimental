@@ -1,11 +1,14 @@
 package net.sf.javagimmicks.ase;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.script.Bindings;
@@ -13,10 +16,14 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import net.sf.javagimmicks.ase.config.ActionConfig;
 import net.sf.javagimmicks.ase.config.DependencyConfig;
 import net.sf.javagimmicks.ase.config.EngineConfig;
-import net.sf.javagimmicks.ase.config.EngineState;
 import net.sf.javagimmicks.ase.config.NodeConfig;
 import net.sf.javagimmicks.ase.config.NodeConfig.TransitionConfig;
 
@@ -27,7 +34,7 @@ public class Engine
 
    private static final ScriptEngine js = new ScriptEngineManager().getEngineByExtension("js");
 
-   private final EngineState state;
+   private final State state;
    private final EngineConfig config;
 
    private final Map<String, ActionConfig> globalActions = new HashMap<>();
@@ -36,7 +43,7 @@ public class Engine
    private final Map<String, Map<String, TransitionConfig>> nodeTransitions = new HashMap<>();
    private final Map<String, Map<String, ActionConfig>> nodeActions = new HashMap<>();
 
-   public Engine(EngineConfig config, Optional<EngineState> state)
+   public Engine(EngineConfig config, State state)
    {
       Objects.requireNonNull(config, "Configuration must not be null!");
 
@@ -51,17 +58,18 @@ public class Engine
                .forEach(a -> nodeActions.computeIfAbsent(n.getName(), k -> new HashMap<>()).put(a.getName(), a));
       });
 
-      this.state = state.orElseGet(() -> {
-         final EngineState s = new EngineState(config.getStartNode());
-         s.getState().putAll(config.getState());
+      if (state == null)
+      {
+         state = new State(config.getStartNode());
+         state.getState().putAll(config.getState());
+      }
 
-         return s;
-      });
+      this.state = state;
    }
 
    public Engine(EngineConfig config)
    {
-      this(config, Optional.empty());
+      this(config, null);
    }
 
    public Engine(String startNodeName)
@@ -72,10 +80,10 @@ public class Engine
       this.config = new EngineConfig(startNodeName);
       config.getNodes().add(startNode);
 
-      state = new EngineState(startNodeName);
+      state = new State(startNodeName);
    }
 
-   public EngineState getState()
+   public State getState()
    {
       return state;
    }
@@ -283,5 +291,75 @@ public class Engine
       {
          return false;
       }
+   }
+
+   public static class State
+   {
+      private String node;
+
+      private Map<String, Object> state;
+
+      private State(String node)
+      {
+         Objects.requireNonNull("Start node may not be null!", node);
+         this.node = node;
+      }
+
+      State()
+      {}
+
+      public String getNode()
+      {
+         return node;
+      }
+
+      public void setNode(String node)
+      {
+         this.node = node;
+      }
+
+      public Map<String, Object> getState()
+      {
+         if (state == null)
+         {
+            state = new LinkedHashMap<>();
+         }
+
+         return state;
+      }
+
+      public String asJson(boolean prettyPrint) throws JsonProcessingException
+      {
+         if (prettyPrint)
+         {
+            return new ObjectMapper().writerWithDefaultPrettyPrinter()
+                  .writeValueAsString(this);
+         }
+         else
+         {
+            return new ObjectMapper().writeValueAsString(this);
+         }
+      }
+
+      public String asJson() throws JsonProcessingException
+      {
+         return asJson(false);
+      }
+
+      public static State fromJson(InputStream is) throws JsonParseException, JsonMappingException, IOException
+      {
+         return new ObjectMapper().readValue(is, State.class);
+      }
+
+      public static State fromJson(Reader r) throws JsonParseException, JsonMappingException, IOException
+      {
+         return new ObjectMapper().readValue(r, State.class);
+      }
+
+      public static State fromJson(String s) throws JsonParseException, JsonMappingException, IOException
+      {
+         return new ObjectMapper().readValue(s, State.class);
+      }
+
    }
 }
