@@ -10,7 +10,14 @@
   }, {
     "name" : "b",
     "transitions" : [ {
-      "target" : "c"
+      "target" : "c",
+      "dependencies" : [ {
+        "script" : "num >= 1003"
+      } ]
+    } ],
+    "actions" : [ {
+      "name" : "incNum2",
+      "script" : "num = num + 2;"
     } ]
   }, {
     "name" : "c",
@@ -25,10 +32,10 @@
       "value" : "bar"
     } ],
     "newNode" : "b",
-    "script" : "foo = 'argh!'\nsubState.subFoo = 'dummy'"
+    "script" : "foo = 'argh!';subState.subFoo = 'dummy';"
   }, {
     "name" : "incNum",
-    "script" : "num = num + 1"
+    "script" : "num = num + 1;"
   } ],
   "state" : {
     "foo" : "bar",

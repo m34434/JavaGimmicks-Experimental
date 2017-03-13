@@ -44,19 +44,11 @@ public class NodeConfig extends CustomPropertiesHolder
       return actions;
    }
 
-   public static class TransitionConfig extends CustomPropertiesHolder
+   public static class TransitionConfig extends CustomPropertiesHolder implements DependencyConfig.Container
    {
-      private String name;
-
       private String target;
 
       private List<DependencyConfig> dependencies;
-
-      public TransitionConfig(String name, String target)
-      {
-         this.name = name;
-         this.target = target;
-      }
 
       public TransitionConfig(String target)
       {
@@ -66,24 +58,9 @@ public class NodeConfig extends CustomPropertiesHolder
       TransitionConfig()
       {}
 
-      public String getName()
-      {
-         return name;
-      }
-
-      public void setName(String name)
-      {
-         this.name = name;
-      }
-
       public String getTarget()
       {
          return target;
-      }
-
-      public void setTarget(String target)
-      {
-         this.target = target;
       }
 
       public List<DependencyConfig> getDependencies()

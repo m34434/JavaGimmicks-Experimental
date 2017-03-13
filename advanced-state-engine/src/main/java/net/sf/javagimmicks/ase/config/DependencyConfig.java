@@ -1,5 +1,7 @@
 package net.sf.javagimmicks.ase.config;
 
+import java.util.List;
+
 public class DependencyConfig extends CustomPropertiesHolder
 {
    private String stateKey;
@@ -36,4 +38,8 @@ public class DependencyConfig extends CustomPropertiesHolder
       return script;
    }
 
+   public static interface Container
+   {
+      List<DependencyConfig> getDependencies();
+   }
 }

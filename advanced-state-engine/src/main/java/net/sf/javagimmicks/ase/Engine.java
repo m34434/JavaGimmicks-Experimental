@@ -46,7 +46,7 @@ public class Engine
       config.getNodes().forEach(n -> {
          nodes.put(n.getName(), n);
          n.getTransitions()
-               .forEach(t -> nodeTransitions.computeIfAbsent(n.getName(), k -> new HashMap<>()).put(t.getName(), t));
+               .forEach(t -> nodeTransitions.computeIfAbsent(n.getName(), k -> new HashMap<>()).put(t.getTarget(), t));
          n.getActions()
                .forEach(a -> nodeActions.computeIfAbsent(n.getName(), k -> new HashMap<>()).put(a.getName(), a));
       });
@@ -103,6 +103,11 @@ public class Engine
       performAction(searchAction(actionName));
    }
 
+   public void takeTransition(String targetNodeName) throws TransitionNotAvailableException
+   {
+      performTransition(searchTransition(targetNodeName));
+   }
+
    public Set<String> getAvailableActions()
    {
       final Set<String> result = new HashSet<>();
@@ -124,38 +129,22 @@ public class Engine
       return result;
    }
 
-   private void performAction(ActionConfig action) throws ActionScriptFailedException
+   public Set<String> getAvailableTransitions()
    {
-      final String script = action.getScript() != null ? action.getScript()
-            : String.format("%s = %s", action.getStateKey(), VAR_REF_VALUE);
+      final Set<String> result = new HashSet<>();
 
-      final Bindings b = js.createBindings();
-      b.putAll(state.getState());
-      b.put(VAR_NODE, state.getNode());
-      b.put(VAR_REF_VALUE, action.getNewValue());
-      try
+      if (state.getNode() != null)
       {
-         js.eval(script, b);
+         final Map<String, TransitionConfig> nodeTransitions = this.nodeTransitions.get(state.getNode());
 
-         final String newNodeFromScript = (String) b.remove(VAR_NODE);
-         if (newNodeFromScript != null && !newNodeFromScript.equals(state.getNode()))
+         if (nodeTransitions != null)
          {
-            state.setNode(newNodeFromScript);
+            nodeTransitions.values().stream().filter(this::checkDependencies).map(TransitionConfig::getTarget)
+                  .forEach(result::add);
          }
-         else if (action.getNewNode() != null)
-         {
-            state.setNode(action.getNewNode());
-         }
-
-         b.remove(VAR_REF_VALUE);
-
-         // state.getState().clear();
-         state.getState().putAll(b);
       }
-      catch (Exception e)
-      {
-         throw new ActionScriptFailedException(action.getName(), script, e);
-      }
+
+      return result;
    }
 
    private ActionConfig searchAction(String actionName) throws ActionNotAvailableException
@@ -192,12 +181,91 @@ public class Engine
       return actionConfig;
    }
 
-   private boolean checkDependencies(ActionConfig actionConfig)
+   private void performAction(ActionConfig action) throws ActionScriptFailedException
    {
-      return actionConfig.getDependencies().stream().allMatch(d -> checkDependency(actionConfig, d));
+      final Bindings b = js.createBindings();
+      b.putAll(state.getState());
+
+      final boolean customScript = action.getScript() != null;
+      final String script;
+
+      if (customScript)
+      {
+         script = action.getScript();
+         b.put(VAR_NODE, action.getNewNode());
+      }
+      else
+      {
+         script = String.format("%s = %s;", action.getStateKey(), VAR_REF_VALUE);
+         b.put(VAR_REF_VALUE, action.getNewValue());
+      }
+
+      try
+      {
+         js.eval(script, b);
+
+         if (customScript)
+         {
+            final String newNodeFromScript = (String) b.remove(VAR_NODE);
+            if (newNodeFromScript != null)
+            {
+               state.setNode(newNodeFromScript);
+            }
+         }
+         else
+         {
+            b.remove(VAR_REF_VALUE);
+
+            final String newNodeFromAction = action.getNewNode();
+            if (newNodeFromAction != null)
+            {
+               state.setNode(newNodeFromAction);
+            }
+         }
+
+         state.getState().putAll(b);
+      }
+      catch (Exception e)
+      {
+         throw new ActionScriptFailedException(action.getName(), script, e);
+      }
    }
 
-   private boolean checkDependency(ActionConfig a, DependencyConfig d)
+   private TransitionConfig searchTransition(String targetNodeName) throws TransitionNotAvailableException
+   {
+      Objects.requireNonNull(targetNodeName, "Target node name not specified!");
+
+      if (state.getNode() == null)
+      {
+         throw new IllegalStateException("Current node is unkown! Check the state configuration!");
+      }
+
+      final Map<String, TransitionConfig> transitions = nodeTransitions.get(state.getNode());
+      if (transitions == null || !transitions.containsKey(targetNodeName))
+      {
+         throw new TransitionNotAvailableException(targetNodeName, false);
+      }
+
+      final TransitionConfig result = transitions.get(targetNodeName);
+      if (!checkDependencies(result))
+      {
+         throw new TransitionNotAvailableException(targetNodeName, true);
+      }
+
+      return result;
+   }
+
+   private void performTransition(TransitionConfig transition)
+   {
+      state.setNode(transition.getTarget());
+   }
+
+   private boolean checkDependencies(DependencyConfig.Container c)
+   {
+      return c.getDependencies().stream().allMatch(d -> checkDependency(c, d));
+   }
+
+   private boolean checkDependency(DependencyConfig.Container c, DependencyConfig d)
    {
       final String script = d.getScript() != null ? d.getScript()
             : String.format("%s == %s", d.getStateKey(), VAR_REF_VALUE);

@@ -3,7 +3,7 @@ package net.sf.javagimmicks.ase.config;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActionConfig extends CustomPropertiesHolder
+public class ActionConfig extends CustomPropertiesHolder implements DependencyConfig.Container
 {
    private String name;
 
